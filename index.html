@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Rule Engine UI</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .section {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        pre {
+            background-color: #f2ffb3;
+            border: 1px solid #080808;
+            border-radius: 4px;
+            padding: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .ast-tree {
+            font-family: monospace;
+            margin-top: 20px;
+        }
+        .ast-tree ul {
+            padding-left: 20px;
+        }
+        .ast-tree li {
+            list-style-type: none;
+            position: relative;
+            padding-left: 20px;
+        }
+        .ast-tree li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            border-left: 1px solid #e03636;
+            height: 100%;
+        }
+        .ast-tree li::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            border-top: 1px solid #e13131;
+            width: 20px;
+        }
+        .ast-tree li:last-child::before {
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Advanced Rule Engine UI</h1>
+    
+    <div class="section">
+        <h2>Create Rule</h2>
+        <textarea id="ruleInput" rows="4" placeholder="Enter your rule here..."></textarea>
+        <button onclick="createRule()">Create Rule</button>
+        <div class="result">Result:</div>
+        <pre id="createResult"></pre>
+        <div class="ast-tree" id="createAstTree"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Combine Rules</h2>
+        <textarea id="rulesInput" rows="6" placeholder="Enter multiple rules, one per line..."></textarea>
+        <button onclick="combineRules()">Combine Rules</button>
+        <div class="result">Result:</div>
+        <pre id="combineResult"></pre>
+        <div class="ast-tree" id="combineAstTree"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Evaluate Rule</h2>
+        <textarea id="astInput" rows="6" placeholder="Paste the AST here..."></textarea>
+        <textarea id="dataInput" rows="4" placeholder="Enter data in JSON format..."></textarea>
+        <button onclick="evaluateRule()">Evaluate Rule</button>
+        <div class="result">Result:</div>
+        <pre id="evaluateResult"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+
+        function astToHtmlTree(ast) {
+    console.log("AST received:", ast); // Debug log
+    if (!ast) return 'No AST data';
+    
+    function createNode(node, depth = 0) {
+        if (typeof node !== 'object') return `<li>${node}</li>`;
+        
+        let html = `<li>${node.type}: ${node.value || ''}`;
+        if (node.left || node.right) {
+            html += '<ul>';
+            if (node.left) html += createNode(node.left, depth + 1);
+            if (node.right) html += createNode(node.right, depth + 1);
+            html += '</ul>';
+        }
+        html += '</li>';
+        return html;
+    }
+    
+    return `<ul class="ast-tree">${createNode(ast)}</ul>`;
+}
+
+async function createRule() {
+    const rule = document.getElementById('ruleInput').value;
+    try {
+        console.log("Sending rule:", rule); // Debug log
+        const response = await axios.post(`${API_URL}/create_rule`, { rule });
+        console.log("Received response:", response.data); // Debug log
+        document.getElementById('createResult').textContent = JSON.stringify(response.data, null, 2);
+        const treeHtml = astToHtmlTree(response.data.ast);
+        console.log("Generated tree HTML:", treeHtml); // Debug log
+        document.getElementById('createAstTree').innerHTML = treeHtml;
+    } catch (error) {
+        console.error("Error creating rule:", error); // Debug log
+        document.getElementById('createResult').textContent = 'Error: ' + error.message;
+        document.getElementById('createAstTree').innerHTML = 'Error creating AST tree';
+    }
+}
+
+async function combineRules() {
+            const rules = document.getElementById('rulesInput').value.split('\n');
+            try {
+                const response = await axios.post(`${API_URL}/combine_rules`, { rules });
+                document.getElementById('combineResult').textContent = JSON.stringify(response.data, null, 2);
+                document.getElementById('combineAstTree').innerHTML = astToHtmlTree(response.data.ast);
+            } catch (error) {
+                document.getElementById('combineResult').textContent = 'Error: ' + error.message;
+                document.getElementById('combineAstTree').innerHTML = '';
+            }
+        }
+
+        async function evaluateRule() {
+            const ast = JSON.parse(document.getElementById('astInput').value);
+            const data = JSON.parse(document.getElementById('dataInput').value);
+            try {
+                const response = await axios.post(`${API_URL}/evaluate_rule`, { ast, data });
+                document.getElementById('evaluateResult').textContent = JSON.stringify(response.data, null, 2);
+            } catch (error) {
+                document.getElementById('evaluateResult').textContent = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
