@@ -93,7 +93,7 @@ This project implements an advanced rule engine with a web-based user interface 
 ## Screenshots
 
 
-![Dashboard Overview](screenshots/RE-bd2.png)
+![Dashboard Overview](screenshots/RE-db2.png)
 
 
 ![Detailed View](screenshots/RE-db3.png)
