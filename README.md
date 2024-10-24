@@ -85,6 +85,18 @@ This project implements an advanced rule engine with a web-based user interface 
 - `POST /evaluate_rule`: Evaluate a rule against provided data
   - Request body: `{ "ast": {...}, "data": {...} }`
   - Response: `{ "result": true/false }`
+ 
+  - # Dashboard
+
+![Dashboard Overview](screenshots/RuleEngine-dashboard.png)
+
+## Screenshots
+
+
+![Dashboard Overview](screenshots/RE-bd2.png)
+
+
+![Detailed View](screenshots/RE-db3.png)
 
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
